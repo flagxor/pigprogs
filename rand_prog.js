@@ -79,17 +79,38 @@ function Generate() {
   return [result, prog];
 }
 
+function SaveState(state) {
+  window.localStorage.setItem('state', JSON.stringify(state));
+}
+
+function LoadState() {
+  try {
+    var data = window.localStorage('state');
+    return JSON.parse(data);
+  } catch (e) {
+    return {score: 0};
+  }
+}
+
 window.onload = function() {
   var answer = document.getElementById('answer');
   var score = document.getElementById('score');
   var go = document.getElementById('go');
   var prob;
+  var state;
 
   function AddPoint() {
     var point = document.createElement('img');
     point.height = 100;
     point.src = 'http://vignette2.wikia.nocookie.net/angrybirds/images/6/61/20130404-kingpig.png/revision/latest?cb=20130404030723';
     score.appendChild(point);
+  }
+
+  function Restore() {
+    var state = LoadState();
+    for (var i = 0; i < state.score; ++i) {
+      AddPoint();
+    }
   }
 
   function NextQuestion() {
@@ -102,10 +123,13 @@ window.onload = function() {
   function CheckAnswer() {
     if (answer.value === '' + prob[0]) {
       AddPoint();
+      state.score++;
+      SaveState(state);
       NextQuestion();
     }
   }
 
+  Restore();
   NextQuestion();
   go.onclick = CheckAnswer;
   answer.onkeypress = function(e) {
