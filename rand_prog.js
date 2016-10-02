@@ -85,7 +85,7 @@ function SaveState(state) {
 
 function LoadState() {
   try {
-    var data = window.localStorage('state');
+    var data = window.localStorage.getItem('state');
     return JSON.parse(data);
   } catch (e) {
     return {score: 0};
