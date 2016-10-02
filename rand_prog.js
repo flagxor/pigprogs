@@ -107,7 +107,7 @@ window.onload = function() {
   }
 
   function Restore() {
-    var state = LoadState();
+    state = LoadState();
     for (var i = 0; i < state.score; ++i) {
       AddPoint();
     }
