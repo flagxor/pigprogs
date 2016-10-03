@@ -3,7 +3,10 @@
 function Generate() {
   var var_names = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'foo', 'bar', 'baz',
+    'big', 'pig', 'angry', 'bird', 'stella', 'number', 'value',
+    'x', 'y', 'z', 'w',
   ];
+  var var_count = 0;
 
   var operators = {
   };
@@ -16,6 +19,7 @@ function Generate() {
     var pick = Random(var_names.length);
     var name = var_names[pick];
     var_names.splice(pick, 1);
+    var_count++;
     return name;
   }
 
@@ -57,21 +61,22 @@ function Generate() {
     return name;
   }
 
+  function ParenIf(x) {
+    if (x === undefined || x.indexOf === undefined) {
+      throw 'out of vars';
+    }
+    if (x.indexOf(' ') >= 0) {
+      x = '(' + x + ')';
+    }
+    return x;
+  }
+
   function DoOp(a, op, b) {
-    if (a.indexOf(' ') >= 0) {
-      a = '(' + a + ')';
-    }
-    if (b.indexOf(' ') >= 0) {
-      b = '(' + b + ')';
-    }
-    return a + ' ' + op + ' ' + b;
+    return ParenIf(a) + ' ' + op + ' ' + ParenIf(b);
   }
 
   function UnOp(op, a) {
-    if (a.indexOf(' ') >= 0) {
-      a = '(' + a + ')';
-    }
-    return op + ' ' + a;
+    return op + ' ' + ParenIf(a);
   }
 
   function Print(e) {
@@ -85,16 +90,60 @@ function Generate() {
     return a;
   }
 
-  function SelectExpr(n) {
-    if (n <= 0) {
-      var val = Random(10);
-      return [val, PickConstant(val)];
+  function Positive(a) {
+    if (a[0] < 0) {
+      return [-a[0], UnOp('-', a[0])];
     }
-    if (Random(4) === 0) {
+    return a;
+  }
+
+  function ApplyBinOp(op, a, b) {
+    switch (op) {
+      case 0: return [a[0] + b[0], DoOp(a[1], '+', b[1])];
+      case 1: return [a[0] - b[0], DoOp(a[1], '-', b[1])];
+      case 2: return [a[0] * b[0], DoOp(a[1], '*', b[1])];
+      case 3: return [a[0] < b[0] ? 1 : 0, DoOp(a[1], '<', b[1])];
+      case 4: return [a[0] > b[0] ? 1 : 0, DoOp(a[1], '>', b[1])];
+      case 5: return [a[0] <= b[0] ? 1 : 0, DoOp(a[1], '<=', b[1])];
+      case 6: return [a[0] >= b[0] ? 1 : 0, DoOp(a[1], '>=', b[1])];
+      case 7: return [a[0] === b[0] ? 1 : 0, DoOp(a[1], '==', b[1])];
+      case 8: return [a[0] !== b[0] ? 1 : 0, DoOp(a[1], '!=', b[1])];
+      case 9: return [(a[0] && b[0]) ? 1 : 0, DoOp(a[1], '&&', b[1])];
+      case 10: return [(a[0] || b[0]) ? 1 : 0, DoOp(a[1], '||', b[1])];
+      case 11: b = Fix0(b);
+        return [a[0] % b[0], DoOp(a[1], '%', b[1])];
+      case 12:
+        b = Fix0(b);
+        return [Math.floor(a[0] / b[0]), DoOp(a[1], '/', b[1])];
+      case 13: return [a[0] & b[0], DoOp(a[1], '&', b[1])];
+      case 14: return [a[0] | b[0], DoOp(a[1], '|', b[1])];
+      case 15: return [a[0] ^ b[0], DoOp(a[1], '^', b[1])];
+    }
+  }
+
+  function ApplyUnOp(op, a) {
+    switch (op) {
+      case 0: return [!a[0] ? 1 : 0, UnOp('!', a[1])];
+      case 1: return [-a[0], UnOp('-', a[1])];
+      case 2: return [~a[0], UnOp('~', a[1])];
+    }
+  }
+
+  function SelectExpr(n) {
+    if (n <= 0 || var_count > 10) {
+      if (var_count < 7 && Random(4) == 0) {
+        var val = Random(10);
+        return [val, PickConstant(val)];
+      } else {
+        var val = Random(10);
+        return [val, '' + val];
+      }
+    }
+    if (Random(6) === 0) {
       var val = Random(10);
       return [val, '' + val];
     }
-    if (Random(5) === 0) {
+    if (Random(7) === 0) {
       var name = Declare();
       var cond = SelectExpr(n - 1);
       var a = SelectExpr(n - 1);
@@ -110,7 +159,7 @@ function Generate() {
         return [b[0], name];
       }
     }
-    if (Random(5) === 0) {
+    if (Random(7) === 0) {
       var value = Random(10);
       var name = PickConstant(value);
       var cond = SelectExpr(n - 1);
@@ -124,52 +173,33 @@ function Generate() {
         return [value, name];
       }
     }
+    if (Random(7) === 0) {
+      var value = Random(10);
+      var name = PickConstant(value);
+      var amount = Positive(SelectExpr(n - 1));
+      var counter = Declare();
+      var op = Random(2);
+      AddOperation('for (' + counter + ' = 0; ' +
+                    counter + ' < ' + ParenIf(amount[1]) +
+                    '; ++' + counter + ') {');
+      ++tabs;
+      var c = SelectExpr(n - 1);
+      var step = ApplyBinOp(op, [value, name], c);
+      Assign(name, step[1]);
+      step = [value, name];
+      --tabs; AddOperation('}');
+      for (var i = 0; i < amount[0]; i++) {
+        step = ApplyBinOp(op, step, c);
+      }
+      return [step[0], name];
+    }
     var result;
     var a = SelectExpr(n - 1);
     if (Random(4) !== 0) {
       var b = SelectExpr(n - 1);
-      switch (Random(16)) {
-        case 0:
-          result = [a[0] + b[0], DoOp(a[1], '+', b[1])]; break;
-        case 1:
-          result = [a[0] - b[0], DoOp(a[1], '-', b[1])]; break;
-        case 2:
-          result = [a[0] * b[0], DoOp(a[1], '*', b[1])]; break;
-        case 3:
-          result = [a[0] < b[0] ? 1 : 0, DoOp(a[1], '<', b[1])]; break;
-        case 4:
-          result = [a[0] > b[0] ? 1 : 0, DoOp(a[1], '>', b[1])]; break;
-        case 5:
-          result = [a[0] <= b[0] ? 1 : 0, DoOp(a[1], '<=', b[1])]; break;
-        case 6:
-          result = [a[0] >= b[0] ? 1 : 0, DoOp(a[1], '>=', b[1])]; break;
-        case 7:
-          result = [a[0] === b[0] ? 1 : 0, DoOp(a[1], '==', b[1])]; break;
-        case 8:
-          result = [a[0] !== b[0] ? 1 : 0, DoOp(a[1], '!=', b[1])]; break;
-        case 9:
-          result = [(a[0] && b[0]) ? 1 : 0, DoOp(a[1], '&&', b[1])]; break;
-        case 10:
-          result = [(a[0] || b[0]) ? 1 : 0, DoOp(a[1], '||', b[1])]; break;
-        case 11:
-          b = Fix0(b);
-          result = [a[0] % b[0], DoOp(a[1], '%', b[1])]; break;
-        case 12:
-          b = Fix0(b);
-          result = [Math.floor(a[0] / b[0]), DoOp(a[1], '/', b[1])]; break;
-        case 13:
-          result = [a[0] & b[0], DoOp(a[1], '&', b[1])]; break;
-        case 14:
-          result = [a[0] | b[0], DoOp(a[1], '|', b[1])]; break;
-        case 15:
-          result = [a[0] ^ b[0], DoOp(a[1], '^', b[1])]; break;
-      }
+      result = ApplyBinOp(Random(16), a, b);
     } else {
-      switch (Random(3)) {
-        case 0: result = [!a[0] ? 1 : 0, UnOp('!', a[1])]; break;
-        case 1: result = [-a[0], UnOp('-', a[1])]; break;
-        case 2: result = [~a[0], UnOp('~', a[1])]; break;
-      }
+      result = ApplyUnOp(Random(3), a);
     }
     if (Random(3) == 2) {
       result = [result[0], Assign(Declare(), result[1])];
