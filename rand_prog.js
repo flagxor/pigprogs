@@ -1,18 +1,23 @@
 'use strict';
 
-function Generate() {
+function Generate(score) {
   var var_names = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'foo', 'bar', 'baz',
     'big', 'pig', 'angry', 'bird', 'stella', 'number', 'value',
-    'x', 'y', 'z', 'w',
+    'x', 'y', 'z', 'w', 'leonard', 'chuck', 'red', 'bomb', 'matilda',
+    'cookie', 'egg', 'toy', 'zebra', 'king', 'chef', 'mustache',
   ];
   var var_count = 0;
 
   var operators = {
   };
 
+  var seed = score;
+
   function Random(n) {
-    return Math.floor(Math.random() * n);
+    //seed = Math.floor(Math.random() * 1000000);
+    seed = (seed * 1103515245 + 12345) % (1 << 31);
+    return seed % n;
   }
 
   function AllocVar() {
@@ -48,6 +53,11 @@ function Generate() {
     var name = AllocVar();
     AddDeclaration('int ' + name + ' = ' + n + ';');
     return name;
+  }
+
+  function PickNumber(n) {
+    var num = Random(n);
+    return [num, '' + num];
   }
 
   function Declare() {
@@ -126,7 +136,16 @@ function Generate() {
       case 0: return [!a[0] ? 1 : 0, UnOp('!', a[1])];
       case 1: return [-a[0], UnOp('-', a[1])];
       case 2: return [~a[0], UnOp('~', a[1])];
+      case 3: return [a[0] << 1, DoOp(a[1], '<<', '1')];
+      case 4: return [a[0] >> 1, DoOp(a[1], '>>', '1')];
     }
+  }
+
+  function ApplyTriOp(a, b, c) {
+    return [
+      a[0] ? b[0] : c[0],
+      ParenIf(a[1]) + ' ? ' + ParenIf(b[1]) + ' : ' + ParenIf(c[1])
+    ];
   }
 
   function SelectExpr(n) {
@@ -135,15 +154,13 @@ function Generate() {
         var val = Random(10);
         return [val, PickConstant(val)];
       } else {
-        var val = Random(10);
-        return [val, '' + val];
+        return PickNumber(10);
       }
     }
     if (Random(6) === 0) {
-      var val = Random(10);
-      return [val, '' + val];
+      return PickNumber(10);
     }
-    if (Random(7) === 0) {
+    if (Random(9) === 0) {
       var name = Declare();
       var cond = SelectExpr(n - 1);
       var a = SelectExpr(n - 1);
@@ -159,7 +176,7 @@ function Generate() {
         return [b[0], name];
       }
     }
-    if (Random(7) === 0) {
+    if (Random(9) === 0) {
       var value = Random(10);
       var name = PickConstant(value);
       var cond = SelectExpr(n - 1);
@@ -173,7 +190,7 @@ function Generate() {
         return [value, name];
       }
     }
-    if (Random(7) === 0) {
+    if (Random(9) === 0) {
       var value = Random(10);
       var name = PickConstant(value);
       var amount = Positive(SelectExpr(n - 1));
@@ -193,13 +210,24 @@ function Generate() {
       }
       return [step[0], name];
     }
+    // Pick Un, Bin, or Tri.
     var result;
     var a = SelectExpr(n - 1);
-    if (Random(4) !== 0) {
+    if (Random(7) === 0) {
+      var b = SelectExpr(n - 1);
+      var c;
+      if (Random(2) === 0) {
+        c = b;
+        b = PickNumber(10);
+      } else {
+        c = PickNumber(10);
+      }
+      result = ApplyTriOp(a, b, c);
+    } else if (Random(4) !== 0) {
       var b = SelectExpr(n - 1);
       result = ApplyBinOp(Random(16), a, b);
     } else {
-      result = ApplyUnOp(Random(3), a);
+      result = ApplyUnOp(Random(5), a);
     }
     if (Random(3) == 2) {
       result = [result[0], Assign(Declare(), result[1])];
@@ -308,7 +336,7 @@ window.onload = function() {
   }
 
   function NextQuestion() {
-    prob = Generate();
+    prob = Generate(state.score);
     question.innerText = prob[1];
     answer.value = '';
     answer.focus();
