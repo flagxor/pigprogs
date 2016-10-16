@@ -179,11 +179,11 @@ function Generate() {
       var amount = Positive(SelectExpr(n - 1));
       var counter = Declare();
       var op = Random(2);
+      var c = SelectExpr(n - 1);
       AddOperation('for (' + counter + ' = 0; ' +
                     counter + ' < ' + ParenIf(amount[1]) +
                     '; ++' + counter + ') {');
       ++tabs;
-      var c = SelectExpr(n - 1);
       var step = ApplyBinOp(op, [value, name], c);
       Assign(name, step[1]);
       step = [value, name];
