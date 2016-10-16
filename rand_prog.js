@@ -1,6 +1,6 @@
 'use strict';
 
-function Generate(score) {
+function Generate(state) {
   var var_names = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'foo', 'bar', 'baz',
     'big', 'pig', 'angry', 'bird', 'stella', 'number', 'value',
@@ -12,12 +12,10 @@ function Generate(score) {
   var operators = {
   };
 
-  var seed = score;
-
   function Random(n) {
-    //seed = Math.floor(Math.random() * 1000000);
-    seed = (seed * 1103515245 + 12345) % (1 << 31);
-    return seed % n;
+    //state.seed = Math.floor(Math.random() * 1000000);
+    state.seed = (state.seed * 1103515245 + 12345) % (1 << 31);
+    return state.seed % n;
   }
 
   function AllocVar() {
@@ -262,12 +260,18 @@ function LoadState() {
       throw 'fail';
     }
     var result = JSON.parse(data);
-    if (result.score === undefined || result.level === undefined) {
-      throw 'fail';
+    if (result.score === undefined) {
+      result.score = 0;
+    }
+    if (result.level === undefined) {
+      result.level = 1;
+    }
+    if (result.seed === undefined) {
+      result.seed = 0;
     }
     return result;
   } catch (e) {
-    var result = {score: 0, level: 1};
+    var result = {score: 0, level: 1, seed: 0};
     SaveState(result);
     return result;
   }
@@ -277,6 +281,7 @@ window.onload = function() {
   var answer = document.getElementById('answer');
   var score = document.getElementById('score');
   var go = document.getElementById('go');
+  var skip = document.getElementById('skip');
   var prob;
   var state;
 
@@ -328,7 +333,14 @@ window.onload = function() {
     score.appendChild(point);
   }
 
+  function ClearPoints() {
+    while (score.hasChildNodes()) {
+      score.removeChild(score.lastChild);
+    }
+  }
+
   function Restore() {
+    ClearPoints();
     state = LoadState();
     for (var i = 0; i < state.score; ++i) {
       AddPoint(i);
@@ -336,7 +348,7 @@ window.onload = function() {
   }
 
   function NextQuestion() {
-    prob = Generate(state.score);
+    prob = Generate(state);
     question.innerText = prob[1];
     answer.value = '';
     answer.focus();
@@ -351,9 +363,20 @@ window.onload = function() {
     }
   }
 
+  function SkipQuestion() {
+    state.score--;
+    if (state.score < 0) {
+      state.score = 0;
+    }
+    SaveState(state);
+    Restore();
+    NextQuestion();
+  }
+
   Restore();
   NextQuestion();
   go.onclick = CheckAnswer;
+  skip.onclick = SkipQuestion;
   answer.onkeypress = function(e) {
     if (e.which === 13) {
       CheckAnswer();
