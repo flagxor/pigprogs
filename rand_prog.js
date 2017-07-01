@@ -208,6 +208,51 @@ function Generate(state) {
       }
       return [step[0], name];
     }
+    if (Random(7) === 0) {
+      var a = SelectExpr(n - 1);
+      var b = Declare();
+      Assign(b, a[1]);
+      switch (Random(4)) {
+        case 0:
+          AddOperation('++' + b + ';');
+          return [a[0] + 1, b];
+        case 1:
+          AddOperation('--' + b + ';');
+          return [a[0] - 1, b];
+        case 2:
+          AddOperation(b + '++' + ';');
+          return [a[0] + 1, b];
+        case 3:
+          AddOperation(b + '--' + ';');
+          return [a[0] - 1, b];
+      }
+    }
+    if (Random(7) === 0) {
+      var a = SelectExpr(n - 1);
+      var b = Declare();
+      var c = SelectExpr(n - 1);
+      Assign(b, a[1]);
+      switch (Random(6)) {
+        case 0:
+          AddOperation(b + ' += ' + c[1] + ';');
+          return [a[0] + c[0], b];
+        case 1:
+          AddOperation(b + ' -= ' + c[1] + ';');
+          return [a[0] - c[0], b];
+        case 2:
+          AddOperation(b + ' *= ' + c[1] + ';');
+          return [a[0] * c[0], b];
+        case 3:
+          AddOperation(b + ' &= ' + c[1] + ';');
+          return [a[0] & c[0], b];
+        case 4:
+          AddOperation(b + ' |= ' + c + ';');
+          return [a[0] & c[0], b];
+        case 5:
+          AddOperation(b + ' ^= ' + c + ';');
+          return [a[0] ^ c[0], b];
+      }
+    }
     // Pick Un, Bin, or Tri.
     var result;
     var a = SelectExpr(n - 1);
