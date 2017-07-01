@@ -246,10 +246,10 @@ function Generate(state) {
           AddOperation(b + ' &= ' + c[1] + ';');
           return [a[0] & c[0], b];
         case 4:
-          AddOperation(b + ' |= ' + c + ';');
+          AddOperation(b + ' |= ' + c[1] + ';');
           return [a[0] & c[0], b];
         case 5:
-          AddOperation(b + ' ^= ' + c + ';');
+          AddOperation(b + ' ^= ' + c[1] + ';');
           return [a[0] ^ c[0], b];
       }
     }
