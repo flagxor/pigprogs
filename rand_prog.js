@@ -319,11 +319,25 @@ window.onload = function() {
   function Restore() {
     ClearPoints();
     state = LoadState();
-    var level = Math.floor(state.score / IMAGES.length);
-    var item = state.score - level * IMAGES.length;
-    for (var i = 0; i < IMAGES.length; ++i) {
-      AddPoint(i, level + (i < item ? 1 : 0));
+    var columns = IMAGES.length - 1;
+    var items = [];
+    for (var i = 0; i < columns; ++i) {
+      items.push(0);
     }
+    var eggs = 0;
+    var j = 0;
+    for (var i = 0; i < state.score; ++i) {
+      if (i % 5 == 1) {
+        items[j]++;
+        j = (j + 1) % columns;
+      } else {
+        eggs++;
+      }
+    }
+    for (var i = 0; i < columns; ++i) {
+      AddPoint(i, items[i]);
+    }
+    AddPoint(columns, eggs);
   }
 
   function NextQuestion() {
