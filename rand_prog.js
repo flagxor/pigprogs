@@ -306,7 +306,7 @@ window.onload = function() {
     score.appendChild(point);
     var text = document.createElement('span');
     text.style = 'font-size: 30px; font-family: San-serif';
-    text.innerText = ' x ' + n + '  ';
+    text.innerText = 'x ' + n + '  ';
     score.appendChild(text);
   }
 
