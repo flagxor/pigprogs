@@ -247,7 +247,7 @@ function Generate(state) {
           return [a[0] & c[0], b];
         case 4:
           AddOperation(b + ' |= ' + c[1] + ';');
-          return [a[0] & c[0], b];
+          return [a[0] | c[0], b];
         case 5:
           AddOperation(b + ' ^= ' + c[1] + ';');
           return [a[0] ^ c[0], b];
