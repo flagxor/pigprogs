@@ -277,6 +277,20 @@ function LoadState() {
   }
 }
 
+var IMAGES = [
+  ['http://vignette2.wikia.nocookie.net/angrybirds/images/6/61/20130404-kingpig.png/revision/latest?cb=20130404030723', 100],
+  ['http://vignette3.wikia.nocookie.net/angrybirds/images/9/9c/33284ddfa59f2d01916f72da3caa3492.png/revision/latest?cb=20130723084428', 100],
+  ['http://vignette3.wikia.nocookie.net/angrybirds/images/9/94/Moustache_pig_sweats.png/revision/latest?cb=20120715013254', 70],
+  ['http://vignette4.wikia.nocookie.net/angrybirds/images/4/4d/AB_Pig_Space.png/revision/latest?cb=20120409022934', 100],
+  ['http://vignette2.wikia.nocookie.net/angrybirds/images/b/b5/Helmet_pig_copy.png/revision/latest?cb=20130103091722', 70],
+  ['http://vignette3.wikia.nocookie.net/angrybirdsfanon/images/f/f0/Angry_Bird_red.png/revision/latest?cb=20130304122242', 70],
+  ['http://vignette4.wikia.nocookie.net/angrybirds/images/9/90/Surprised_Chuck.png/revision/latest?cb=20130917102203', 70],
+  ['http://vignette2.wikia.nocookie.net/angry-birds-roleplay/images/3/3b/Bomb.png/revision/latest?cb=20140630191947', 100],
+  ['http://vignette1.wikia.nocookie.net/angrybirds/images/6/64/BlueBirdToons.png/revision/latest/scale-to-width-down/200?cb=20140415181802', 100],
+  ['http://vignette2.wikia.nocookie.net/angrybirds/images/4/4d/WhiteBirdToons.png/revision/latest?cb=20140415182012', 100],
+  ['http://vignette2.wikia.nocookie.net/angrybirds/images/9/94/Egg_angry_birds.png/revision/20130917102542', 70],
+];
+
 window.onload = function() {
   var answer = document.getElementById('answer');
   var score = document.getElementById('score');
@@ -285,52 +299,15 @@ window.onload = function() {
   var prob;
   var state;
 
-  function PickKind(n) {
-    var group = Math.floor(n / 5);
-    if (n % 5 === 0) {
-      return group % 10;
-    } else {
-      return -1;
-    }
-  }
-  function AddPoint(n) {
+  function AddPoint(kind, n) {
     var point = document.createElement('img');
-    n = PickKind(n);
-    if (n === 0) {
-      point.src = 'http://vignette2.wikia.nocookie.net/angrybirds/images/6/61/20130404-kingpig.png/revision/latest?cb=20130404030723';
-      point.height = 100;
-    } else if (n === 1) {
-      point.src = 'http://vignette3.wikia.nocookie.net/angrybirds/images/9/9c/33284ddfa59f2d01916f72da3caa3492.png/revision/latest?cb=20130723084428';
-      point.height = 100;
-    } else if (n === 2) {
-      point.src = 'http://vignette3.wikia.nocookie.net/angrybirds/images/9/94/Moustache_pig_sweats.png/revision/latest?cb=20120715013254';
-      point.height = 70;
-    } else if (n === 3) {
-      point.src = 'http://vignette4.wikia.nocookie.net/angrybirds/images/4/4d/AB_Pig_Space.png/revision/latest?cb=20120409022934';
-      point.height = 100;
-    } else if (n === 4) {
-      point.src = 'http://vignette2.wikia.nocookie.net/angrybirds/images/b/b5/Helmet_pig_copy.png/revision/latest?cb=20130103091722';
-      point.height = 70;
-    } else if (n === 5) {
-      point.src = 'http://vignette3.wikia.nocookie.net/angrybirdsfanon/images/f/f0/Angry_Bird_red.png/revision/latest?cb=20130304122242';
-      point.height = 70;
-    } else if (n === 6) {
-      point.src = 'http://vignette4.wikia.nocookie.net/angrybirds/images/9/90/Surprised_Chuck.png/revision/latest?cb=20130917102203';
-      point.height = 70;
-    } else if (n === 7) {
-      point.src = 'http://vignette2.wikia.nocookie.net/angry-birds-roleplay/images/3/3b/Bomb.png/revision/latest?cb=20140630191947';
-      point.height = 100;
-    } else if (n === 8) {
-      point.src = 'http://vignette1.wikia.nocookie.net/angrybirds/images/6/64/BlueBirdToons.png/revision/latest/scale-to-width-down/200?cb=20140415181802';
-      point.height = 100;
-    } else if (n === 9) {
-      point.src = 'http://vignette2.wikia.nocookie.net/angrybirds/images/4/4d/WhiteBirdToons.png/revision/latest?cb=20140415182012';
-      point.height = 100;
-    } else {
-      point.src = 'http://vignette2.wikia.nocookie.net/angrybirds/images/9/94/Egg_angry_birds.png/revision/20130917102542';
-      point.height = 70;
-    }
+    point.src = IMAGES[kind][0];
+    point.height = IMAGES[kind][1];
     score.appendChild(point);
+    var text = document.createElement('span');
+    text.style = 'font-size: 30px; font-family: San-serif';
+    text.innerText = ' x ' + n + '  ';
+    score.appendChild(text);
   }
 
   function ClearPoints() {
@@ -342,8 +319,10 @@ window.onload = function() {
   function Restore() {
     ClearPoints();
     state = LoadState();
-    for (var i = 0; i < state.score; ++i) {
-      AddPoint(i);
+    var level = Math.floor(state.score / IMAGES.length);
+    var item = state.score - level * IMAGES.length;
+    for (var i = 0; i < IMAGES.length; ++i) {
+      AddPoint(i, level + (i < item ? 1 : 0));
     }
   }
 
@@ -356,9 +335,9 @@ window.onload = function() {
 
   function CheckAnswer() {
     if (answer.value === '' + prob[0]) {
-      AddPoint(state.score);
       state.score++;
       SaveState(state);
+      Restore();
       NextQuestion();
     }
   }
